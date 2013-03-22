@@ -25,13 +25,15 @@ class Database{
 	}
 
 	public function login($username){
-		$result = mysql_query("SELECT pw, timestamp FROM users WHERE uname='$username';");
+		$query = "SELECT pw, timestamp FROM users WHERE uname='".mysql_real_escape_string($username)."';";
+		$result= mysql_query($query);
 		$pass_result = mysql_fetch_object($result);
 		return $pass_result;
 	}
 
 	public function register($username, $password, $timestamp){
-		$result = mysql_query("SELECT pw FROM users WHERE uname='$username';");
+		$query= "SELECT pw FROM users WHERE uname='".mysql_real_escape_string($username)."';";
+		$result = mysql_query($query);
 		$pass_result = mysql_fetch_object($result);
 
 		if ($pass_result->pw){
