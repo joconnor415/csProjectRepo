@@ -15,6 +15,13 @@ import os
 import dns.resolver
 import operator
 
+#DNS Detetion Algorithm for Botnets and also Advanced Persistent Threat Attackers
+#Preconditions: Assume Tor is running in order to preserve anonymity for lookups
+#Unfinished, still have to finish clustering and polish
+#Created own heuristics for APT, based on ngram distance to words in custom dictionary
+#along with being recently updated, having low ranking ASN, and no text records
+#Botent Detection based on character frequency analysis and Fast Flux Detection Algorithm 
+
 #(TOR is installed/running on client), establishing TOR connection to do DNS lookups
 def connectTor():
     socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 9050, True)
@@ -228,10 +235,10 @@ def splitHostDomain(query):
 #read whitelist.txt and return result as a set of domains
 def getWhitelistedDomains():
     
-    whitelist = []
+    whitelist = set()
     for line in open('whitelist.txt','r'):
-        whitelist.append(line.rstrip())
-    return set(whitelist)
+        whitelist.add(line.rstrip())
+    return whitelist
 import csv
 whiteset= getWhitelistedDomains()
 
