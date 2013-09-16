@@ -85,14 +85,14 @@ import getopt
 
 class TrainingSet:
     def __init__(self):
-      self.dict = {}
-      self.numEmail = 0  
+      self.map = {}
+      self.num_of_emails = 0  
       
-    def trainOn(self, path):
+    def train(self, path):
         os.chdir(path)
-        numEmail = 0
+        num_of_emails = 0
         for file in os.listdir("./"):
-            numEmail += 1
+            num_of_emails += 1
             try:
                 f=open(file)
             except:
@@ -106,19 +106,19 @@ class TrainingSet:
                 for w in words:
                     w = string.lower(w)
                     if ( len(w) > 2 and len(w) < 20 and w not in stopwords):
-                        if( w in self.dict): self.dict[w] += 1
-                        else : self.dict[w] = 1 
+                        if( w in self.map): self.map[w] += 1
+                        else : self.map[w] = 1 
         os.chdir("../")
-        self.numEmail= numEmail
+ dict       self.num_of_emails= num_of_emails
         
-def prob(email, spamSet, hamSet):
+def get_probability(email, spam_list, ham_list):
     num = 0
-    spamScore = log(spamSet.numEmail/float(spamSet.numEmail + hamSet.numEmail))
-    hamScore = log(hamSet.numEmail/float(spamSet.numEmail + hamSet.numEmail))
+    spam_score = log(spam_list.num_of_emails/float(spam_list.num_of_emails + ham_list.num_of_emails))
+    ham_score = log(ham_list.num_of_emails/float(spam_list.num_of_emails + ham_list.num_of_emails))
     try:
         f=open(email)
     except:
-        print "Can't find file this " + email 
+        print "Sorry cannot find the file: " + email 
         sys.exit(2)
                 
     table = string.maketrans("", "")
@@ -129,64 +129,64 @@ def prob(email, spamSet, hamSet):
             w = string.lower(w)
             if ( len(w) > 2 and len(w) < 20 and w not in stopwords):
                 # if it's in both of them 
-                if( w in spamSet.dict and w in hamSet.dict):
-                    sScore = spamSet.dict[w]
-                    hScore = hamSet.dict[w]
-                    if( spamScore == 0 ): 
-                        spamScore = log(float(sScore)/spamSet.numEmail)
+                if( w in spam_list.map and w in ham_list.map):
+                    s_score = spam_list.map[w]
+                    h_score = ham_list.map[w]
+                    if( spam_score == 0 ): 
+                        spam_score = log(float(s_score)/spam_list.num_of_emails)
                     else: 
-                        spamScore = spamScore + log(float(sScore)/spamSet.numEmail)
+                        spam_score = spam_score + log(float(s_score)/spam_list.num_of_emails)
 
-                    if( hamScore == 0 ): 
-                        hamScore = log(float(hScore)/hamSet.numEmail)
+                    if( ham_score == 0 ): 
+                        ham_score = log(float(h_score)/ham_list.num_of_emails)
                     else: 
-                        hamScore = hamScore + log(float(hScore)/hamSet.numEmail)
+                        ham_score = ham_score + log(float(h_score)/ham_list.num_of_emails)
                     
-                # if the word is only in hamSet then apply .99 and .01 to spam
-                elif( w in hamSet.dict):
-                    if( spamScore == 0 ): 
-                        spamScore = log(.01)
+                # if the word is only in ham_list then apply .99 and .01 to spam
+                elif( w in ham_list.map):
+                    if( spam_score == 0 ): 
+                        spam_score = log(.01)
                     else: 
-                        spamScore = spamScore + log(float(.01))
+                        spam_score = spam_score + log(float(.01))
                         
-                    if( hamScore == 0):
-                        hamScore = log(0.99)
+                    if( ham_score == 0):
+                        ham_score = log(0.99)
                     else: 
-                        hamScore = hamScore + log(.99)
-                elif( w in spamSet.dict):
-                    if( spamScore == 0 ): 
-                        spamScore = log(.99)
+                        ham_score = ham_score + log(.99)
+                elif( w in spam_list.map):
+                    if( spam_score == 0 ): 
+                        spam_score = log(.99)
                     else: 
-                        spamScore = spamScore + log(float(.99))
+                        spam_score = spam_score + log(float(.99))
                         
-                    if( hamScore == 0):
-                        hamScore = log(0.01)
+                    if( ham_score == 0):
+                        ham_score = log(0.01)
                     else: 
-                        hamScore = hamScore + log(.01)
+                        ham_score = ham_score + log(.01)
                 # if not in both, we will take it as ham since spam words 
                 # tends to be all too fimiliar
                 else:
-                    if( hamScore == 0):
-                        hamScore = log(0.4)
+                    if( ham_score == 0):
+                        ham_score = log(0.4)
                     else: 
-                        hamScore = hamScore + log(.4)
+                        ham_score = ham_score + log(.4)
 
-    return spamScore, hamScore
+    return spam_score, ham_score
                     
 
 def test(testSet, spamTSet, hamTSet):
-    spamC = 0
-    hamC = 0
+    spam_c = 0
+    ham_c = 0
     os.chdir(testSet)
     for file in os.listdir("./"):
-        spam, ham = prob(file, spamTSet, hamTSet)
+        spam, ham = get_probability(file, spamTSet, hamTSet)
     
         if( spam > ham):
-            spamC +=1    
+            spam_c +=1    
         if(ham > spam):
-            hamC +=1
+            ham_c +=1
     os.chdir("../")
-    return spamC, hamC
+    return spam_c, ham_c
 
 def usage():
     print "Usage: python ./nb.py --hamtrain=dir1 --spamtrain=dir2 --hamtest=dir3 --spamtest=dir4"
@@ -228,11 +228,11 @@ if __name__ == '__main__' :
     
     hamTSet = TrainingSet()
     spamTSet = TrainingSet()
-    hamTSet.trainOn(hamtrain)
-    spamTSet.trainOn(spamtrain)
+    hamTSet.train(hamtrain)
+    spamTSet.train(spamtrain)
     
-    spamC, hamC = test(hamtest, spamTSet, hamTSet)
-    spamC1, hamC1 = test(spamtest, spamTSet, hamTSet)
+    spam_c, ham_c = test(hamtest, spamTSet, hamTSet)
+    spam_c1, ham_c1 = test(spamtest, spamTSet, hamTSet)
     
     
     print """ 
@@ -242,10 +242,10 @@ Percentage of ham classified correctly: %.1f
 Percentage of spam classified correctly: %.1f
 Total accuracy: %.1f
 False Positives: %.1f
-"""   % (hamTSet.numEmail, spamTSet.numEmail, 
-            float(hamC)/(hamC+spamC)*100, float(spamC1)/(hamC1+spamC1)*100,
-            (float(hamC)/(hamC+spamC)+ float(spamC1)/(hamC1+spamC1))*50,
-            100 - float(hamC)/(hamC+spamC)*100)
+"""   % (hamTSet.num_of_emails, spamTSet.num_of_emails, 
+            float(ham_c)/(ham_c+spam_c)*100, float(spam_c1)/(ham_c1+spam_c1)*100,
+            (float(ham_c)/(ham_c+spam_c)+ float(spam_c1)/(ham_c1+spam_c1))*50,
+            100 - float(ham_c)/(ham_c+spam_c)*100)
 
 
 
@@ -256,7 +256,7 @@ False Positives: %.1f
 """
 def getTset(tSet_name):
     trainingSet = TrainingSet()
-    trainingSet.trainOn("/Users/ganbilegbor/Desktop/Spring 2013/cs662/Eclipse/Assignment6/" + tSet_name)
+    trainingSet.train("/Users/ganbilegbor/Desktop/Spring 2013/cs662/Eclipse/Assignment6/" + tSet_name)
     return trainingSet
     
 spam = ["spam", "spam_2"]
